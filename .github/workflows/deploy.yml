@@ -44,6 +44,18 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - name: Verify Firebase configuration
+        run: |
+          test -n "$VITE_FIREBASE_API_KEY" || (echo "Missing API KEY" && exit 1)
+          test -n "$VITE_FIREBASE_AUTH_DOMAIN" || (echo "Missing AUTH DOMAIN" && exit 1)
+          test -n "$VITE_FIREBASE_PROJECT_ID" || (echo "Missing PROJECT ID" && exit 1)
+          test -n "$VITE_FIREBASE_APP_ID" || (echo "Missing APP ID" && exit 1)
+          echo "Firebase configuration variables are present."
+        env:
+          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
       - run: npm run build
         env:
           # Public client config (not secrets). Set these as repository Variables.
