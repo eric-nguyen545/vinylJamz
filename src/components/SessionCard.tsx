@@ -8,6 +8,7 @@ interface Props { session: StoredSession; showAlbum?: boolean; onEdit: () => voi
 
 export function SessionCard({ session: s, showAlbum = true, onEdit, onDelete }: Props) {
   const title = s.albumTitle ?? 'Album'
+  const submittedAt = s.createdAt?.toDate?.()
   return (
     <li className="flex gap-4 rounded-2xl bg-sleeve p-4">
       {showAlbum && <AlbumArtwork url={s.artworkUrl} title={title} artist={s.primaryArtist ?? ''} className="w-16 shrink-0 self-start rounded" />}
@@ -18,6 +19,7 @@ export function SessionCard({ session: s, showAlbum = true, onEdit, onDelete }: 
             : <span className="font-medium">{formatDay(s.date)}</span>}
           {showAlbum && <span className="text-sm text-dust">{formatDay(s.date)}</span>}
         </div>
+        {submittedAt && <time dateTime={submittedAt.toISOString()} className="text-xs text-dust">Logged at {submittedAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</time>}
         <p className="mt-1 text-sm text-dust">{s.completedAlbum ? 'Whole album' : 'Partial listen'}{s.locationText ? `, ${s.locationText}` : ''}</p>
         {s.vibeTags.length > 0 && <ul aria-label="Vibes" className="mt-2 flex flex-wrap gap-2">{s.vibeTags.map((v) => <li key={v} className="rounded-full bg-sleeve-hi px-2.5 py-0.5 text-xs">{v}</li>)}</ul>}
         {s.notes && <p className="mt-2 whitespace-pre-wrap text-sm">{s.notes}</p>}

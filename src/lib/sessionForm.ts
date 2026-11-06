@@ -2,13 +2,13 @@ import { listeningSessionInputSchema, dateString, type ListeningSessionInput } f
 import type { FormErrors, Result } from './formState'
 import { todayLocal } from './format'
 
-export interface SessionFormState { date: string; completedAlbum: boolean; locationText: string; vibeTags: string[]; notes: string }
+export interface SessionFormState { date: string; completedAlbum: boolean; locationText: string; mood: string; notes: string }
 
-export const emptySessionForm = (today = todayLocal()): SessionFormState => ({ date: today, completedAlbum: true, locationText: '', vibeTags: [], notes: '' })
+export const emptySessionForm = (today = todayLocal()): SessionFormState => ({ date: today, completedAlbum: true, locationText: '', mood: '', notes: '' })
 
 export const sessionToForm = (s: Partial<ListeningSessionInput>): SessionFormState => ({
   date: s.date?.slice(0, 10) ?? todayLocal(), completedAlbum: s.completedAlbum ?? true,
-  locationText: s.locationText ?? '', vibeTags: s.vibeTags ?? [], notes: s.notes ?? '',
+  locationText: s.locationText ?? '', mood: s.vibeTags?.join(', ') ?? '', notes: s.notes ?? '',
 })
 
 export interface AlbumRef { id: string; title: string; primaryArtist: string; artworkUrl?: string }
@@ -21,7 +21,7 @@ export function formToSession(f: SessionFormState, album: AlbumRef | null, today
   if (Object.keys(errors).length || !album) return { ok: false, errors }
   const parsed = listeningSessionInputSchema.safeParse({
     albumId: album.id, date: f.date, completedAlbum: f.completedAlbum, locationText: f.locationText.trim() || undefined,
-    vibeTags: f.vibeTags, notes: f.notes.trim() || undefined,
+    vibeTags: f.mood.trim() ? [f.mood.trim()] : [], notes: f.notes.trim() || undefined,
     albumTitle: album.title, primaryArtist: album.primaryArtist, artworkUrl: album.artworkUrl,
   })
   if (parsed.success) return { ok: true, value: parsed.data }

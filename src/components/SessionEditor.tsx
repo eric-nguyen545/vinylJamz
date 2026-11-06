@@ -8,7 +8,6 @@ import { normalizeText } from '../lib/normalize'
 import { AlbumArtwork } from './AlbumArtwork'
 import { Field, inputClass } from './Field'
 import { ErrorState } from './States'
-import { VibeTagInput } from './VibeTagInput'
 
 interface Props {
   uid: string
@@ -79,7 +78,9 @@ export function SessionEditor({ uid, fixedAlbum, albums = [], session, onSaved, 
         <input type="checkbox" checked={form.completedAlbum} onChange={(e) => setForm({ ...form, completedAlbum: e.target.checked })} className="size-5 accent-[var(--color-label)]" />
         Listened to the whole album
       </label>
-      <VibeTagInput value={form.vibeTags} onChange={(vibeTags) => setForm({ ...form, vibeTags })} error={errors.vibeTags} label="Mood or vibe" />
+      <Field label="Mood" hint="Optional. Describe the mood or anything else in your own words." error={errors.vibeTags}>
+        <textarea className={inputClass} rows={2} maxLength={500} value={form.mood} onChange={(e) => setForm({ ...form, mood: e.target.value })} />
+      </Field>
       <Field label="Notes" error={errors.notes}><textarea className={inputClass} rows={3} maxLength={5000} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></Field>
       <div className="flex gap-3">
         <button type="submit" disabled={busy} className="rounded-lg bg-label px-5 py-2 font-semibold text-label-ink disabled:opacity-50">{busy ? 'Saving…' : 'Save listen'}</button>

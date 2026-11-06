@@ -15,12 +15,12 @@ describe('session form', () => {
     expect(formToSession({ ...emptySessionForm(today), date: '' }, album, today).ok).toBe(false)
   })
   it('builds a session with an album snapshot and drops blanks', () => {
-    const r = formToSession({ ...emptySessionForm(today), vibeTags: ['late night'], notes: '  ' }, album, today)
-    expect(r.ok && r.value).toMatchObject({ albumId: 'a1', date: today, completedAlbum: true, albumTitle: 'Kind of Blue', primaryArtist: 'Miles Davis', vibeTags: ['late night'] })
+    const r = formToSession({ ...emptySessionForm(today), mood: 'late night, anything goes', notes: '  ' }, album, today)
+    expect(r.ok && r.value).toMatchObject({ albumId: 'a1', date: today, completedAlbum: true, albumTitle: 'Kind of Blue', primaryArtist: 'Miles Davis', vibeTags: ['late night, anything goes'] })
     expect(r.ok && r.value.notes).toBeUndefined()
     expect(r.ok && r.value.locationText).toBeUndefined()
   })
   it('round-trips stored sessions', () => {
-    expect(sessionToForm({ date: '2026-02-01', completedAlbum: false, locationText: 'Car', vibeTags: ['driving'], notes: 'n' })).toEqual({ date: '2026-02-01', completedAlbum: false, locationText: 'Car', vibeTags: ['driving'], notes: 'n' })
+    expect(sessionToForm({ date: '2026-02-01', completedAlbum: false, locationText: 'Car', vibeTags: ['driving', 'late night'], notes: 'n' })).toEqual({ date: '2026-02-01', completedAlbum: false, locationText: 'Car', mood: 'driving, late night', notes: 'n' })
   })
 })

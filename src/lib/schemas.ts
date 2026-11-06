@@ -119,7 +119,7 @@ export const listeningSessionInputSchema = z.object({
   date: z.string().min(10).max(32),
   completedAlbum: z.boolean().default(true),
   locationText: optionalText(200),
-  vibeTags: z.array(z.string().max(40)).max(30).default([]),
+  vibeTags: z.array(z.string().max(500)).max(30).default([]),
   notes: optionalText(5000),
   /** Display snapshot so the journal needs no per-session album reads. */
   albumTitle: optionalText(300),
