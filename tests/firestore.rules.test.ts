@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, it } from 'vitest'
 import { assertFails, assertSucceeds, initializeTestEnvironment, type RulesTestEnvironment } from '@firebase/rules-unit-testing'
 import { collection, deleteDoc, doc, getDoc, getDocs, serverTimestamp, setDoc } from 'firebase/firestore'
 
-const OWNER = 'owner-uid'
+const OWNER = 'e33PlwhcRycrTeCKYCp57POmMfq1'
 const OTHER = 'other-uid'
 const SHARE = 'a'.repeat(32)
 const OFF = 'b'.repeat(32)
@@ -11,8 +11,15 @@ const sections = (over: Record<string, boolean> = {}) => ({ collection: true, wa
 let env: RulesTestEnvironment
 
 beforeAll(async () => {
-  const rules = readFileSync('firestore.rules', 'utf8').replace('REPLACE_WITH_OWNER_UID', OWNER)
-  env = await initializeTestEnvironment({ projectId: 'demo-vinyl-archive', firestore: { rules, host: '127.0.0.1', port: 8080 } })
+  const rules = readFileSync('firestore.rules', 'utf8')
+  env = await initializeTestEnvironment({
+    projectId: 'demo-vinyl-archive',
+    firestore: {
+      rules,
+      host: '127.0.0.1',
+      port: 8080
+    }
+  })
 })
 afterAll(async () => env?.cleanup())
 
