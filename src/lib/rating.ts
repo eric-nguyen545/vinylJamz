@@ -1,11 +1,12 @@
 /** Ratings are stored on a canonical 0-10 scale so changing the display scale never corrupts data. */
-export const ratingStep = (ratingMax: number) => (ratingMax === 100 ? 1 : 0.5)
+export const ratingStep = (ratingMax: number) => (ratingMax === 100 ? 1 : 0.1)
 
 export const toCanonical = (value: number, ratingMax: number) => Math.round((value / ratingMax) * 10 * 100) / 100
 
 export function fromCanonical(canonical: number, ratingMax: number): number {
   const step = ratingStep(ratingMax)
-  return Math.round(((canonical / 10) * ratingMax) / step) * step
+  const value = Math.round(((canonical / 10) * ratingMax) / step) * step
+  return Number(value.toFixed(step === 1 ? 0 : 1))
 }
 
 export function formatRating(canonical: number | undefined, ratingMax: number): string {

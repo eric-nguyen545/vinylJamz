@@ -12,13 +12,14 @@ describe('review form', () => {
     expect(r.ok && r.value.rating).toBe(9)
   })
   it('rejects out-of-range, non-numeric and off-step ratings', () => {
-    for (const rating of ['11', '-1', 'abc', '7.3']) {
+    for (const rating of ['11', '-1', 'abc', '7.35']) {
       const r = formToReview({ ...emptyReviewForm(), rating }, 10, [])
       expect(r.ok).toBe(false)
       if (!r.ok) expect(r.errors.rating).toBeTruthy()
     }
     expect(formToReview({ ...emptyReviewForm(), rating: '84' }, 100, []).ok).toBe(true)
     expect(formToReview({ ...emptyReviewForm(), rating: '84.5' }, 100, []).ok).toBe(false)
+    expect(formToReview({ ...emptyReviewForm(), rating: '7.3' }, 10, []).ok).toBe(true)
   })
   it('drops top tracks that no longer exist and caps at three', () => {
     const r = formToReview({ ...emptyReviewForm(), topThreeTrackIds: ['a', 'gone', 'b'] }, 10, ['a', 'b', 'c'])
@@ -27,6 +28,7 @@ describe('review form', () => {
   })
   it('round-trips a stored rating into the display scale', () => {
     expect(reviewToForm({ rating: 9 }, 5).rating).toBe('4.5')
+    expect(reviewToForm({ rating: 7.3 }, 10).rating).toBe('7.3')
     expect(reviewToForm(null, 10)).toEqual(emptyReviewForm())
   })
   it('normalizes and dedupes vibe tags', () => {

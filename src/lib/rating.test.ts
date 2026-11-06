@@ -11,7 +11,7 @@ describe('rating', () => {
     expect(toCanonical(80, 100)).toBe(8)
     expect(toCanonical(7.5, 10)).toBe(7.5)
     expect(fromCanonical(8, 5)).toBe(4)
-    expect(fromCanonical(7.3, 10)).toBe(7.5)
+    expect(fromCanonical(7.3, 10)).toBe(7.3)
     expect(fromCanonical(8.4, 100)).toBe(84)
   })
   it('keeps the same album rating when the display scale changes', () => {
@@ -25,5 +25,5 @@ describe('rating', () => {
     expect(formatRating(9, 5)).toBe('4.5 / 5')
     expect(formatRating(undefined, 10)).toBe('')
   })
-  it('uses half-point steps except on 0-100', () => { expect(ratingStep(10)).toBe(0.5); expect(ratingStep(100)).toBe(1) })
+  it('uses tenth-point steps except on 0-100', () => { expect(ratingStep(10)).toBe(0.1); expect(ratingStep(5)).toBe(0.1); expect(ratingStep(100)).toBe(1) })
 })

@@ -59,8 +59,8 @@ export function SettingsPage() {
           <label className="flex flex-col gap-1 text-sm font-medium">
             Rating scale
             <select {...register('ratingMax', { valueAsNumber: true })} className="rounded-lg border border-groove bg-sleeve px-3 py-2 text-base font-normal">
-              <option value={10}>0–10 in half points</option>
-              <option value={5}>0–5 in half points</option>
+              <option value={10}>0–10 in tenths</option>
+              <option value={5}>0–5 in tenths</option>
               <option value={100}>0–100</option>
             </select>
           </label>
