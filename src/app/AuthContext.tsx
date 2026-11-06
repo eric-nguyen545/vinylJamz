@@ -69,6 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (init.kind !== 'ok') return
     return onAuthStateChanged(init.fb.auth, (user) => {
+      console.log('Owner diagnostic:', {
+        authenticatedUid: user?.uid,
+        configuredOwnerUid: ownerUid,
+        ownerUidPresent: Boolean(ownerUid),
+        uidMatches: Boolean(user && ownerUid && user.uid === ownerUid),
+      })
+
       if (!user) setState({ status: 'signed-out' })
       else if (ownerUid && user.uid === ownerUid) setState({ status: 'owner', user })
       else setState({ status: 'not-owner', uid: user.uid, email: user.email })
