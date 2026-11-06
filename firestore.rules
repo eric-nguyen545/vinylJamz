@@ -1,0 +1,174 @@
+rules_version = '2';
+
+// Single-owner security model.
+// Replace REPLACE_WITH_OWNER_UID with the Firebase Auth UID of the owner account
+// before deploying (see README). Never trust a UID sent from the client.
+//
+// Layers:
+//   users/{uid}/**                     private data, owner only
+//   publicCollections/{shareId}/**     sanitized public copy, readable by anyone when the owner allows it
+//   publicSite/main                    pointer telling visitors which share is the public website
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner() {
+      return request.auth != null && request.auth.uid == 'e33PlwhcRycrTeCKYCp57POmMfq1';
+    }
+
+    function share(shareId) {
+      return get(/databases/$(database)/documents/publicCollections/$(shareId)).data;
+    }
+
+    // A section is readable only when the share is enabled AND that section's switch is on.
+    function sectionOn(shareId, section) {
+      return share(shareId).enabled == true && share(shareId).sections[section] == true;
+    }
+
+    function str(d, k, max) { return d[k] is string && d[k].size() <= max; }
+    function optStr(d, k, max) { return !(k in d) || str(d, k, max); }
+    function optNum(d, k) { return !(k in d) || d[k] is number; }
+    function optUrl(d, k) { return !(k in d) || (str(d, k, 2000) && d[k].matches('https?://.*')); }
+    function optList(d, k, max) { return !(k in d) || (d[k] is list && d[k].size() <= max); }
+
+    // ---------- Private owner data ----------
+    match /users/{uid}/{document=**} {
+      allow read, write: if isOwner() && request.auth.uid == uid;
+    }
+
+    // ---------- Public website pointer ----------
+    // Anyone can read it. It only contains a share ID while the site is public.
+    match /publicSite/{id} {
+      allow get: if id == 'main';
+      allow list: if false;
+      allow create, update: if isOwner() && id == 'main'
+        && request.resource.data.keys().hasOnly(['enabled', 'shareId', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['enabled', 'shareId', 'updatedAt'])
+        && request.resource.data.enabled is bool
+        && request.resource.data.shareId is string
+        && ((request.resource.data.enabled == false && request.resource.data.shareId == '')
+            || (request.resource.data.enabled == true && request.resource.data.shareId.size() == 32))
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isOwner();
+    }
+
+    // ---------- Public copy ----------
+    // Visitors can GET a share document only when enabled. Listing is never allowed,
+    // so share IDs cannot be enumerated.
+    match /publicCollections/{shareId} {
+      allow get: if isOwner() || resource.data.enabled == true;
+      allow list: if false;
+      allow create, update: if isOwner()
+        && request.resource.data.keys().hasOnly(['enabled', 'displayName', 'bio', 'sections', 'updatedAt'])
+        && request.resource.data.keys().hasAll(['enabled', 'displayName', 'sections', 'updatedAt'])
+        && request.resource.data.enabled is bool
+        && str(request.resource.data, 'displayName', 80)
+        && request.resource.data.displayName.size() > 0
+        && optStr(request.resource.data, 'bio', 500)
+        && request.resource.data.sections is map
+        && request.resource.data.sections.keys().hasOnly(['collection', 'wantlist', 'journal', 'gear', 'places', 'stats'])
+        && request.resource.data.sections.keys().hasAll(['collection', 'wantlist', 'journal', 'gear', 'places', 'stats'])
+        && request.resource.data.sections.collection is bool
+        && request.resource.data.sections.wantlist is bool
+        && request.resource.data.sections.journal is bool
+        && request.resource.data.sections.gear is bool
+        && request.resource.data.sections.places is bool
+        && request.resource.data.sections.stats is bool
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isOwner();
+
+      match /albums/{albumId} {
+        allow read: if isOwner() || sectionOn(shareId, 'collection');
+        allow create, update: if isOwner()
+          && request.resource.data.keys().hasOnly([
+            'title', 'artistNames', 'releaseYear', 'genres', 'artworkUrl', 'tracklist',
+            'rating', 'review', 'vibes', 'topThreeTracks', 'publicPressingSummary', 'discogs', 'purchases', 'publishedAt'
+          ])
+          && request.resource.data.keys().hasAll(['title', 'artistNames', 'publishedAt'])
+          && str(request.resource.data, 'title', 300)
+          && request.resource.data.artistNames is list
+          && request.resource.data.artistNames.size() <= 30
+          && optStr(request.resource.data, 'review', 10000)
+          && (!('rating' in request.resource.data) || (request.resource.data.rating is number && request.resource.data.rating >= 0 && request.resource.data.rating <= 10))
+          && optNum(request.resource.data, 'releaseYear')
+          && optUrl(request.resource.data, 'artworkUrl')
+          && optList(request.resource.data, 'genres', 30)
+          && optList(request.resource.data, 'tracklist', 200)
+          && optList(request.resource.data, 'vibes', 30)
+          && optList(request.resource.data, 'topThreeTracks', 3)
+          && optList(request.resource.data, 'publicPressingSummary', 20)
+          && optList(request.resource.data, 'purchases', 20)
+          && (!('discogs' in request.resource.data) || request.resource.data.discogs is map)
+          && request.resource.data.publishedAt == request.time;
+        allow delete: if isOwner();
+      }
+
+      match /wantlist/{itemId} {
+        allow read: if isOwner() || sectionOn(shareId, 'wantlist');
+        allow create, update: if isOwner()
+          && request.resource.data.keys().hasOnly(['albumTitle', 'primaryArtist', 'artworkUrl', 'releaseYear', 'priority', 'status', 'desiredPressingNotes', 'targetPrice', 'currency', 'publishedAt'])
+          && request.resource.data.keys().hasAll(['albumTitle', 'publishedAt'])
+          && str(request.resource.data, 'albumTitle', 300)
+          && optStr(request.resource.data, 'primaryArtist', 200)
+          && optUrl(request.resource.data, 'artworkUrl')
+          && optNum(request.resource.data, 'releaseYear')
+          && (!('priority' in request.resource.data) || request.resource.data.priority in ['low', 'medium', 'high'])
+          && optStr(request.resource.data, 'status', 40)
+          && optStr(request.resource.data, 'desiredPressingNotes', 1000)
+          && optNum(request.resource.data, 'targetPrice')
+          && optStr(request.resource.data, 'currency', 3)
+          && request.resource.data.publishedAt == request.time;
+        allow delete: if isOwner();
+      }
+
+      match /listens/{itemId} {
+        allow read: if isOwner() || sectionOn(shareId, 'journal');
+        allow create, update: if isOwner()
+          && request.resource.data.keys().hasOnly(['albumTitle', 'primaryArtist', 'artworkUrl', 'date', 'completedAlbum', 'vibeTags', 'notes', 'publishedAt'])
+          && request.resource.data.keys().hasAll(['albumTitle', 'date', 'publishedAt'])
+          && str(request.resource.data, 'albumTitle', 300)
+          && optStr(request.resource.data, 'primaryArtist', 200)
+          && optUrl(request.resource.data, 'artworkUrl')
+          && str(request.resource.data, 'date', 10)
+          && (!('completedAlbum' in request.resource.data) || request.resource.data.completedAlbum is bool)
+          && optList(request.resource.data, 'vibeTags', 30)
+          && optStr(request.resource.data, 'notes', 5000)
+          && request.resource.data.publishedAt == request.time;
+        allow delete: if isOwner();
+      }
+
+      match /gear/{itemId} {
+        allow read: if isOwner() || sectionOn(shareId, 'gear');
+        allow create, update: if isOwner()
+          && request.resource.data.keys().hasOnly(['name', 'category', 'brand', 'model', 'condition', 'purchaseDate', 'purchasePrice', 'currency', 'publishedAt'])
+          && request.resource.data.keys().hasAll(['name', 'category', 'publishedAt'])
+          && str(request.resource.data, 'name', 200)
+          && str(request.resource.data, 'category', 40)
+          && optStr(request.resource.data, 'brand', 100)
+          && optStr(request.resource.data, 'model', 100)
+          && optStr(request.resource.data, 'condition', 20)
+          && optStr(request.resource.data, 'purchaseDate', 10)
+          && (!('purchasePrice' in request.resource.data) || (request.resource.data.purchasePrice is number && request.resource.data.purchasePrice >= 0))
+          && optStr(request.resource.data, 'currency', 3)
+          && request.resource.data.publishedAt == request.time;
+        allow delete: if isOwner();
+      }
+
+      match /places/{itemId} {
+        allow read: if isOwner() || sectionOn(shareId, 'places');
+        allow create, update: if isOwner()
+          && request.resource.data.keys().hasOnly(['name', 'latitude', 'longitude', 'publishedAt'])
+          && request.resource.data.keys().hasAll(['name', 'latitude', 'longitude', 'publishedAt'])
+          && str(request.resource.data, 'name', 200)
+          && request.resource.data.latitude is number && request.resource.data.latitude >= -90 && request.resource.data.latitude <= 90
+          && request.resource.data.longitude is number && request.resource.data.longitude >= -180 && request.resource.data.longitude <= 180
+          && request.resource.data.publishedAt == request.time;
+        allow delete: if isOwner();
+      }
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

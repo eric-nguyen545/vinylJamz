@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: #14151b;
+  --color-sleeve: #1c1e27;
+  --color-sleeve-hi: #242734;
+  --color-groove: #2e3140;
+  --color-paper: #ece9f1;
+  --color-dust: #a0a2b6;
+  --color-label: #e3b04b;
+  --color-label-ink: #1a1405;
+  --color-ok: #6fcf97;
+  --color-warn: #f2c94c;
+  --color-bad: #ff8a80;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@layer base {
+  html { color-scheme: dark; }
+  body {
+    margin: 0;
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  :focus-visible {
+    outline: 2px solid var(--color-label);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+@keyframes spin-record { to { transform: rotate(360deg); } }
+.record-spin { animation: spin-record 6s linear infinite; }
+
+/* Map pins (drawn in CSS so no marker image assets are needed) */
+.loc-pin { display: block; width: 18px; height: 18px; border-radius: 50%; background: var(--color-label); border: 3px solid var(--color-ink); box-shadow: 0 0 0 2px var(--color-label); }
+.loc-pin.unverified { background: transparent; border: 3px dashed var(--color-label); box-shadow: none; background-color: rgba(227, 176, 75, 0.35); }
+.leaflet-container { font-family: var(--font-sans); background: var(--color-sleeve); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--color-sleeve); color: var(--color-paper); }
+.leaflet-popup-content a { color: var(--color-label); }
