@@ -12,7 +12,7 @@ let env: RulesTestEnvironment
 
 beforeAll(async () => {
   const rules = readFileSync('firestore.rules', 'utf8').replace('REPLACE_WITH_OWNER_UID', OWNER)
-  env = await initializeTestEnvironment({ projectId: 'vinyl-archive-rules-test', firestore: { rules, host: '127.0.0.1', port: 8080 } })
+  env = await initializeTestEnvironment({ projectId: 'demo-vinyl-archive', firestore: { rules, host: '127.0.0.1', port: 8080 } })
 })
 afterAll(async () => env?.cleanup())
 
