@@ -56,6 +56,16 @@ jobs:
           VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+      - name: Verify owner UID
+        run: |
+          if [ "$VITE_OWNER_UID" = "e33PlwhcRycrTeCKYCp57POmMfq1" ]; then
+            echo "SUCCESS: Owner UID matches."
+          else
+            echo "ERROR: Owner UID is missing or incorrect."
+            exit 1
+          fi
+        env:
+          VITE_OWNER_UID: ${{ vars.VITE_OWNER_UID }}
       - run: npm run build
         env:
           # Public client config (not secrets). Set these as repository Variables.
